@@ -1,0 +1,65 @@
+---
+title: "Statistical Methods for Discrete Response, Time Series, and Panel Data (W271): Lab 2"
+author:
+  - "Aditi Khullar"
+  - "Daniel Vanlunen"
+  - "XT Nguyen"
+output: 
+  pdf_document:
+  toc: true
+  number_sections: true
+fontsize: 11pt
+geometry: margin=1in
+---
+# Strategic Placement of Products in Grocery Stores
+
+Answer **Question 12 of chapter 3 (on page 189 and 190)** of Bilder and Loughin's *"Analysis of Categorical Data with R"*.  Here is the background of this analysis, taken as an excerpt from this question:
+
+In order to maximize sales, items within grocery stores are strategically placed to draw customer attention. This exercise examines one type of item—breakfast cereal. Typically, in large grocery stores, boxes of cereal are placed on sets of shelves located on one side of the aisle. By placing particular boxes of cereals on specific shelves, grocery stores may better attract customers to them. To investigate this further, a random sample of size 10 was taken from each of four shelves at a Dillons grocery store in Manhattan, KS. These data are given in the **cereal_dillons.csv** file. The response variable is the shelf number, which is numbered from bottom (1) to top (4), and the explanatory variables are the sugar, fat, and sodium content of the cereals.
+
+# setup
+
+# a
+**a. The explanatory variables need to be reformatted before proceeding further. **
+## First
+**Divide each explanatory variable by its serving size to account for the different serving sizes among the cereals. **
+  
+## Second
+**Rescale each variable to be within 0 and 1.**
+  
+  
+# b
+
+## box plots
+**b. Construct side-by-side box plots with dot plots overlaid for each of the explanatory variables. **
+   
+
+## parallel coordinates plot
+**Also, construct a parallel coordinates plot for the explanatory variables and the shelf number. Discuss if possible content differences exist among the shelves.**
+
+# c
+**c. The response has values of $1, 2, 3,$ and $4$. Under what setting would it be desirable to take into account ordinality. Do you think that this setting occurs here?**
+
+
+# d
+**d. Estimate a multinomial regression model with linear forms of the sugar, fat, and sodium variables. Perform LRTs to examine the importance of each explanatory variable.**
+
+# e
+**e. Show that there are no significant interactions among the explanatory variables (including an interaction among all three variables).**
+
+# f
+**f. Kellogg’s Apple Jacks (http://www.applejacks.com) is a cereal marketed toward children. For a serving size of $28$ grams, its sugar content is $12$ grams, fat content is $0.5$ grams, and sodium content is $130$ milligrams. Estimate the shelf probabilities for Apple Jacks.**
+
+# g
+**g. Construct a plot similar to Figure 3.3 where the estimated probability for a shelf is on the y-axis and the sugar content is on the x-axis. Use the mean overall fat and sodium content as the corresponding variable values in the model. Interpret the plot with respect to sugar content.**
+
+# h
+**h. Estimate odds ratios and calculate corresponding confidence intervals for each explanatory variable. Relate your interpretations back to the plots constructed for this exercise.**
+
+
+
+
+
+
+
+
