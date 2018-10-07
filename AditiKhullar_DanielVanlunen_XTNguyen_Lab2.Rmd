@@ -17,49 +17,265 @@ Answer **Question 12 of chapter 3 (on page 189 and 190)** of Bilder and Loughin'
 
 In order to maximize sales, items within grocery stores are strategically placed to draw customer attention. This exercise examines one type of item—breakfast cereal. Typically, in large grocery stores, boxes of cereal are placed on sets of shelves located on one side of the aisle. By placing particular boxes of cereals on specific shelves, grocery stores may better attract customers to them. To investigate this further, a random sample of size 10 was taken from each of four shelves at a Dillons grocery store in Manhattan, KS. These data are given in the **cereal_dillons.csv** file. The response variable is the shelf number, which is numbered from bottom (1) to top (4), and the explanatory variables are the sugar, fat, and sodium content of the cereals.
 
+```{r include=F}
+library(Hmisc)
+library(tidyverse)
+
+library(ggplot2)
+library(MASS) #used to make ggplot parallel coordinates plots
+library(dplyr)
+```
+
+
 # setup
+```{r}
+d <- read.csv(file = 'cereal_dillons.csv')
+d$Shelf_factor <- as.factor(d$Shelf)
+str(d)
+describe(d)
+```
 
 # a
+
 **a. The explanatory variables need to be reformatted before proceeding further. **
+
 ## First
+
 **Divide each explanatory variable by its serving size to account for the different serving sizes among the cereals. **
+```{r}
+d <- d %>% 
+  mutate(
+    sugar_g_per_serving = sugar_g/size_g,
+    fat_g_per_serving = fat_g/size_g,
+    sodium_mg_per_serving = sodium_mg/size_g
+  )
+```
   
 ## Second
+
 **Rescale each variable to be within 0 and 1.**
+
+```{r}
+# min max scale a data point
+#    if newrow, scale according to values in d
+min_max_scale <- function(x, newrowcolname) {
+  if (missing(newrowcolname)) {
+    return((x - min(x)) / (max(x) - min(x)))
+  } else {
+    return((x - min(d[, newrowcolname])) / 
+             (max(d[, newrowcolname]) - 
+                min(d[, newrowcolname])
+              )
+           )
+  }
+}
+
+d <- d %>%
+  mutate(
+    sugar = min_max_scale(sugar_g_per_serving),
+    fat = min_max_scale(fat_g_per_serving),
+    sodium = min_max_scale(sodium_mg_per_serving)
+  )
+```
   
   
 # b
 
 ## box plots
+
 **b. Construct side-by-side box plots with dot plots overlaid for each of the explanatory variables. **
-   
+
+```{r fig.width=8, fig.height=4}
+# scaled covariates
+d %>% 
+  dplyr::select(ID, Shelf, Cereal, sugar, fat, sodium) %>% 
+  gather(var, value, -ID, -Shelf, -Cereal) %>% 
+  ggplot(aes(x=factor(Shelf), y = value)) +
+  geom_boxplot(aes(fill=factor(Shelf))) +
+  geom_jitter(height = 0) +
+  facet_grid( . ~ var) +
+  labs(title= "Univariate Distribution of Scaled Covariates",
+       x="Shelf",
+       y="Min-Max Scaled, Per Serving Value") +
+  scale_fill_discrete(name="Shelf")
+```
+```{r fig.height=4}
+# serving size
+d %>% 
+  ggplot(aes(x=factor(Shelf), y = size_g, fill=factor(Shelf))) +
+  geom_boxplot() +
+  geom_jitter() +
+  labs(title= "Univariate Distribution of Serving Size",
+       x="Shelf") + scale_fill_discrete(name="Shelf")
+```
+
 
 ## parallel coordinates plot
+
 **Also, construct a parallel coordinates plot for the explanatory variables and the shelf number. Discuss if possible content differences exist among the shelves.**
 
+```{r fig.height=4}
+# 
+par(mar=c(5.1,4.1,4.1,8.1), xpd=T)
+d %>% 
+  dplyr::select(sugar, fat, sodium, size_g) %>%
+  parcoord(col = d$Shelf_factor, var.label = T,
+           main="Parallel Coordinates Plot for Scaled Covariates and Serving Size")
+legend(x= "right", inset = c(-.2,0),
+       legend = c("1","2", "3", "4"),
+       col=c(1,2,3,4),
+       title="shelf",
+       lty=1
+       )
+
+```
+
+Shelf 1 appears to have high sodium content and small serving sizes. Shelf 2 has high sugar and small serving sizes. Shelf 3 and 4 have large serving sizes. 
+
 # c
+
 **c. The response has values of $1, 2, 3,$ and $4$. Under what setting would it be desirable to take into account ordinality. Do you think that this setting occurs here?**
 
+It would make sense to account for ordinality if the variable were ordinal (e.g. Likert) and if we believe the proportional odds assumption of the ordinal logisitc regression. Here, it does not make sense to account for ordinality. We have no reason to believe that there is a natural ordering of shelves: we wouldn't expect a function of the covariates to make us believe the item deserves a higher shelf or a lower shelf. Rather we would expect a function of the covariates might point us to a particular shelf. It makes more sense to analyze each shelf separately.
 
 # d
+
 **d. Estimate a multinomial regression model with linear forms of the sugar, fat, and sodium variables. Perform LRTs to examine the importance of each explanatory variable.**
 
+```{r}
+m <- nnet::multinom(
+  formula = Shelf ~  fat + sodium + sugar,
+  data = d, trace = F)
+summary(m)
+car::Anova(m)
+car::Anova(nnet::multinom(
+  formula = Shelf ~  fat,
+  data = d, trace =F))
+```
+Sodium and sugar both have a significant impact on the log odds of being on a particular shelf holding fat and the other variable (sodium for sugar and sugar for sodium) constant. The impact of fat is not statistically significant whether or not we account for other variables.
+
 # e
+
 **e. Show that there are no significant interactions among the explanatory variables (including an interaction among all three variables).**
 
+```{r}
+# Check each two-way intercation for significance
+car::Anova(nnet::multinom(
+  formula = Shelf ~  fat + sodium + sugar + fat:sugar,
+  data = d, trace = F))
+car::Anova(nnet::multinom(
+  formula = Shelf ~  fat + sodium + sugar + fat:sodium,
+  data = d, trace = F))
+car::Anova(nnet::multinom(
+  formula = Shelf ~  fat + sodium + sugar + sodium:sugar,
+  data = d, trace = F))
+
+# check three way interaction for significance
+car::Anova(nnet::multinom(
+  formula = Shelf ~  fat + sodium + sugar + fat:sodium + fat:sugar + sodium:sugar + fat:sodium:sugar,
+  data = d, trace = F))
+```
+
+After accounting for individual covariate effects, each two way interaction is not significant as can be seen from the first three `Anova` tests above showing p values of .16 for `fat:sugar`,  .12 for `fat:sodium`, and .50 for `sodium:sugar`. Also, the three way interaction is not significant after accounting for the individual covariates and the two-way interactions as can be seen in the final `Anova` test above showing a .46 p-value.
+
 # f
+
 **f. Kellogg’s Apple Jacks (http://www.applejacks.com) is a cereal marketed toward children. For a serving size of $28$ grams, its sugar content is $12$ grams, fat content is $0.5$ grams, and sodium content is $130$ milligrams. Estimate the shelf probabilities for Apple Jacks.**
 
+```{r}
+cor(d %>% dplyr::select(fat,sodium,sugar))
+```
+
+Fat does not have a statistically significant impact on the log odds of being on a given shelf as seen above. However, we are interested in how much the different variables affect the probability of which shelf a cereal is on. These estimates could be biased if we do not include fat because fat is correlated with the other covariates and the outcomes. Therefore, to be able to interpret the effects of sodium and sugar as holding fat constant, we choose to use the formula `Shelf ~ fat + sugar + sodium`. This model was stored in `m` above.
+
+To get predictions using this model, we transform the new cereal's covariates the same way we scaled the covariates in the training data (using the min and max from the training data to scale to 0-1).
+
+```{r}
+aj <- data.frame(Cereal="Apple Jacks", size_g=28, sugar_g=12, fat_g=.5, sodium_mg=130) %>% 
+  mutate(
+    sugar = min_max_scale(sugar_g/size_g,"sugar_g_per_serving"),
+    fat = min_max_scale(fat_g/size_g,"fat_g_per_serving"),
+    sodium = min_max_scale(sodium_mg/size_g,"sodium_mg_per_serving")
+  )
+```
+
+```{r}
+predict(m, type="probs", newdata=aj)
+```
+
+According to our model, Apple Jacks as a 5.3% chance of being on shelf 1, 47.2% chance of shelf 2, 20.0% chance of shelf 3, and 27.4% change of shelf 4.
+
 # g
+
 **g. Construct a plot similar to Figure 3.3 where the estimated probability for a shelf is on the y-axis and the sugar content is on the x-axis. Use the mean overall fat and sodium content as the corresponding variable values in the model. Interpret the plot with respect to sugar content.**
 
+To estimate the probabilities, we use a constant, scaled fat level of .347 (the mean value) given fat is not significant, we do not expect the curves to shift significantly at different levels of fat. We facet by scaled sodium values at values of .319, .535, and .709 (the 15th percentile, median, and 85th percentile) to see how much things change for low, high, and middle levels of sodium.
+
+```{r fig.width=8, fig.height=4}
+predict_data <- data.frame(
+  sugar = rep(seq(0,1,by=.05),3),
+  fat = .347,
+  sodium = rep(c(.319,.535,.709), each=21)
+)
+
+cbind(predict_data,
+      predict(m, type="probs", newdata=predict_data)) %>% 
+  gather(Shelf, Predicted_Probability,-sugar,-fat,-sodium) %>% 
+  mutate(
+    # note don't need to worry about min because is 0 for all three vars
+    sugar_g_per_serving=sugar*max(d$sugar_g_per_serving),
+    fat_g_per_serving=fat*max(d$fat_g_per_serving),
+    sodium_mg_per_serving=sodium*max(d$sodium_mg_per_serving)
+         ) %>%
+  ggplot(aes(x=sugar_g_per_serving, y=Predicted_Probability, colour=factor(Shelf))) +
+  geom_line() +
+  facet_grid(. ~ round(sodium_mg_per_serving,3)) + 
+  guides(colour=guide_legend(title="Shelf")) +
+  labs( title="Predicted Probability of Each Shelf vs Sugar Level",
+        subtitle="Faceted by three sodium levels (mg per serving shown in top of facet), constant fat level (.032g per serving)",
+        y="predicted probability",
+        x="sugar (g per serving)")
+```
+
+Low sugar levels indicate that the cereal is on shelf 3 or 4. As the sugar level increases, we see the cereal is more likely to be on shelf 1 or 2. Sodium gives a big boost to shelf 1, such that it has the highest probability even at high values of sugar (though if we could imagine a cereal with a much higher sugar level, shelf 2 would still get the highest prediction), This potentially lends evidence to the hypothesis that children enjoy sugary cereal so sugary cereals are placed low where the children can see them.
+
 # h
+
 **h. Estimate odds ratios and calculate corresponding confidence intervals for each explanatory variable. Relate your interpretations back to the plots constructed for this exercise.**
 
+```{r}
+# constant shift by .1 times the range (which equals the max bc all mins 0)
+round(.1*max(d$fat_g_per_serving),2)
+round(.1*max(d$sodium_mg_per_serving),2)
+round(.1*max(d$sugar_g_per_serving),2)
+# ORs
+round(exp(.1*summary(m)$coefficients),2)
+# Wald confidence intervals
+round(exp(.1*confint(m, level=.95)),2)
+```
 
+## fat
 
+The odds of being on shelf 2 instead of shelf 1 change by 1.50 times (between .96 and 2.36 times with 95% confidence) for an increase of .01g of fat per serving.
+The odds of being on shelf 3 instead of shelf 1 change by .95 times (between .59 and 1.52 times with 95% confidence) for an increase of .01g of fat per serving.
+The odds of being on shelf 4 instead of shelf 1 change by .92 times (between .57 and 1.47 times with 95% confidence) for an increase of .01g of fat per serving.
 
+These confidence bands all contain 1 indicating how fat is not significant.
 
+## sodium
 
+The odds of being on shelf 2 instead of shelf 1 change by .17 times (between .04 and .70 times with 95% confidence) for an increase of 1.07mg of sodium per serving.
+The odds of being on shelf 3 instead of shelf 1 change by .08 times (between .02 and .40 times with 95% confidence) for an increase of 1.07mg of sodium per serving.
+The odds of being on shelf 4 instead of shelf 1 change by .08 times (between .02 and .41 times with 95% confidence) for an increase of 1.07mg of sodium per serving.
+
+All of these confidence intervals are below one showing the signficance of sodium. Also, as we saw in the predict probability plots, when sodium is high, category 1 is most likely (thus odds of all other classes vs 1 go down as sodium increases). The box plot also showed that shelf 1 has much higher sodium levels than all other shelves.
+
+## sugar
+
+The odds of being on shelf 2 instead of shelf 1 change by 1.31 times (between .49 and 3.52 times with 95% confidence) for an increase of .06g of sugar per serving.
+The odds of being on shelf 3 instead of shelf 1 change by .29 times (between .11 and .77 times with 95% confidence) for an increase of .06g of sugar per serving.
+The odds of being on shelf 4 instead of shelf 1 change by .32 times (between .12 and .83 times with 95% confidence) for an increase of .06g of sugar per serving.
+
+Two of these confidence intervals are below one showing that sugar is a significant differentiator between shelves 1 vs 3 or 4. As we saw in the predicted probability plots, the probability of shelves 3 and 4 decreased as sugar content increased. On the other hand, the predicted probability of shelf 2 and 3 increased to a point, though 2 takes priority (given the OR above 1 between 1 and 2) at higher sugar contents. This also aligns with the box plot showing the shelf 2 clearly has the highest sugar content.
 
 
