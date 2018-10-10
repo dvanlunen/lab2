@@ -35,7 +35,7 @@ str(d)
 describe(d)
 ```
 
-# a
+## Data transformations
 
 **a. The explanatory variables need to be reformatted before proceeding further. **
 
@@ -57,7 +57,7 @@ d <- d %>%
 
 ```{r}
 # min max scale a data point
-#    if newrow, scale according to values in d
+# if newrow, scale according to values in d
 min_max_scale <- function(x, newrowcolname) {
   if (missing(newrowcolname)) {
     return((x - min(x)) / (max(x) - min(x)))
@@ -65,8 +65,7 @@ min_max_scale <- function(x, newrowcolname) {
     return((x - min(d[, newrowcolname])) / 
              (max(d[, newrowcolname]) - 
                 min(d[, newrowcolname])
-              )
-           )
+              ))
   }
 }
 
@@ -78,13 +77,10 @@ d <- d %>%
   )
 ```
   
-  
-# b
 
-## box plots
 
 **b. Construct side-by-side box plots with dot plots overlaid for each of the explanatory variables. **
-
+## Box Plots
 ```{r fig.width=8, fig.height=4}
 # scaled covariates
 d %>% 
@@ -110,27 +106,42 @@ d %>%
 ```
 
 
-## parallel coordinates plot
+##Parallel Coordinates Plot
 
 **Also, construct a parallel coordinates plot for the explanatory variables and the shelf number. Discuss if possible content differences exist among the shelves.**
 
-```{r fig.height=4}
+```{r fig.width=8, fig.height=4}
 # 
 par(mar=c(5.1,4.1,4.1,8.1), xpd=T)
 d %>% 
   dplyr::select(sugar, fat, sodium, size_g) %>%
   parcoord(col = d$Shelf_factor, var.label = T,
-           main="Parallel Coordinates Plot for Scaled Covariates and Serving Size")
-legend(x= "right", inset = c(-.2,0),
-       legend = c("1","2", "3", "4"),
-       col=c(1,2,3,4),
-       title="shelf",
-       lty=1
-       )
+           main="Parallel Coordinates Plot for Scaled Covariates and Serving Size") 
+  legend(x= "right", inset = c(-.2,0),
+         legend = c("1", "2", "3", "4"),
+         col=c(1,2,3,4),
+         title="Shelf",
+         lty=1
+         )
+
+```
+##Looking at the means of the explanatory variables across shelves
+```{r fig.width=8, fig.height=9, warning=FALSE, message=FALSE}
+attach(mtcars)
+par(mfrow=c(3,1))
+library(gplots)
+# Plot the mean of teeth length by dose groups
+plotmeans(sugar  ~ Shelf_factor, data = d, frame = FALSE, xlab = "Shelfs", main = "Plots of means of explanatory variablse with 95% CI", lwd=2, col=1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+plotmeans(sodium  ~ Shelf_factor, data = d, frame = FALSE, xlab = "Shelfs", lwd=2, col = 2, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+plotmeans(fat  ~ Shelf_factor, data = d, frame = FALSE, xlab = "Shelfs", lwd=2, col = 3, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
 
 ```
 
-Shelf 1 appears to have high sodium content and small serving sizes. Shelf 2 has high sugar and small serving sizes. Shelf 3 and 4 have large serving sizes. 
+* Shelf 1 appears to have highest sodium content and small serving sizes. Sodium content is decreasing as we go up the shelfs, expect for shelf 4, where the mean is slightly higher than shelf 3.
+
+
+* Shelf 2 has high sugar(highest mean sugar content) and small serving sizes. 
+* Shelf 3 and 4 have large serving sizes. 
 
 # c
 
