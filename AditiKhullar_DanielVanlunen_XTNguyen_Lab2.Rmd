@@ -22,7 +22,7 @@ library(Hmisc)
 library(tidyverse)
 
 library(ggplot2)
-library(MASS) #used to make ggplot parallel coordinates plots
+library(MASS)
 library(dplyr)
 ```
 
@@ -200,7 +200,7 @@ car::Anova(nnet::multinom(
   data = d, trace = F))
 ```
 
-Based on the LRT test results aboe, we can conclude there are no significant interactions among the explanatory variables (including an interaction among all three variables) since for all interaction effects, p values are greater than 0.05.
+After accounting for individual covariate effects, each two way interaction is not significant as can be seen from the first three `Anova` tests above showing p values of .16 for `fat:sugar`,  .12 for `fat:sodium`, and .50 for `sodium:sugar`. Also, the three way interaction is not significant after accounting for the individual covariates and the two-way interactions as can be seen in the final `Anova` test above showing a .46 p-value.
 
 # f
 
@@ -244,7 +244,7 @@ predict_data <- data.frame(
   sodium = rep(c(.319,.535,.709), each=21)
 )
 
-predict_data
+predict_data %>% head()
 
 cbind(predict_data,
       predict(m, type="probs", newdata=predict_data)) %>% 
@@ -269,7 +269,7 @@ cbind(predict_data,
 Low sugar levels indicate that the cereal is on shelf 3 or 4.
 As the sugar level increases, we see the cereal is more likely to be on shelf 1 or 2. Sodium gives a big boost to shelf 1, such that it has the highest probability even at high values of sugar (though if we could imagine a cereal with a much higher sugar level, shelf 2 would still get the highest prediction), This potentially lends evidence to the hypothesis that children enjoy sugary cereal so sugary cereals are placed low where the children can see them.
 
-This is consistent with our exploratory analysis in part (b), where shelf 2 appears t have the highest sugar content, and shelves 3 and 4 have similar sugar content as the probability of being on 3 or 4 follows each other closely as the sugar content increases. Also, shelf 1 has a wide range of sugar content, we can see that from this plot where, for different levels of sodium, we can see the curve for shelf 1 differ greatly. This indicates that, shelf 1 has a wide range of products, both high sugar and sodium, and low sugar and sodium.
+This is consistent with our exploratory analysis in part (b), where shelf 2 appears to have the highest sugar content, and shelves 3 and 4 have similar sugar content as the probability of being on 3 or 4 follows each other closely as the sugar content increases. Also, shelf 1 has a wide range of sugar content, we can see that from this plot where, for different levels of sodium, we can see the curve for shelf 1 differ greatly. This indicates that, shelf 1 has a wide range of products, both high sugar and sodium, and low sugar and sodium.
 
 # h
 
@@ -308,6 +308,6 @@ The odds of being on shelf 2 instead of shelf 1 change by 1.31 times (between .4
 The odds of being on shelf 3 instead of shelf 1 change by .29 times (between .11 and .77 times with 95% confidence) for an increase of .06g of sugar per serving.
 The odds of being on shelf 4 instead of shelf 1 change by .32 times (between .12 and .83 times with 95% confidence) for an increase of .06g of sugar per serving.
 
-Two of these confidence intervals are below one showing that sugar is a significant differentiator between shelves 1 vs 3 or 4. As we saw in the predicted probability plots, the probability of shelves 3 and 4 decreased as sugar content increased. On the other hand, the predicted probability of shelf 2 and 3 increased to a point, though 2 takes priority (given the OR above 1 between 1 and 2) at higher sugar contents. This also aligns with the box plot showing the shelf 2 clearly has the highest sugar content. Furthermore, the odds of being on shelf 4 instead of 1 and shelf 3 instead of 1 changed by similar magnitude, which is consistent with our previous observations the the probability plot and boxplots that shelf 3 and 4 have similar sugar contents.
+Two of these confidence intervals are below one showing that sugar is a significant differentiator between shelves 1 vs 3 or 4. As we saw in the predicted probability plots, the probability of shelves 3 and 4 decreased as sugar content increased. On the other hand, the predicted probability of shelf 2 and 3 increased to a point, though 2 takes priority (given the OR above 1 between 1 and 2) at higher sugar contents. This also aligns with the box plot showing the shelf 2 clearly has the highest sugar content. Furthermore, the odds of being on shelf 4 instead of 1 and shelf 3 instead of 1 changed by similar magnitude, which is consistent with our previous observations in the probability plot and boxplots that shelf 3 and 4 have similar sugar contents.
 
 
