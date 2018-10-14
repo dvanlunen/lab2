@@ -84,7 +84,7 @@ head(d)
   
 # b
 
-## box plots
+## Box Plots
 
 **b. Construct side-by-side box plots with dot plots overlaid for each of the explanatory variables. **
 
@@ -115,26 +115,30 @@ d %>%
 ```
 
 
-## parallel coordinates plot
+## Parallel Coordinates Plot
 
-**Also, construct a parallel coordinates plot for the explanatory variables and the shelf number.** 
+**Also, construct a parallel coordinates plot for the explanatory variables and the shelf number. Discuss if possible content differences exist among the shelves.** 
 
-```{r fig.height=4}
+```{r fig.height=4, fig.width=8}
 # 
-par(mar=c(5.1,4.1,4.1,8.1), xpd=T)
-d %>% 
+par(mar = c(5.1, 4.1, 4.1, 8.1), xpd = T)
+d %>%
   dplyr::select(sugar, fat, sodium, size_g) %>%
-  parcoord(col = d$Shelf_factor, var.label = T,
-           main="Parallel Plot for Scaled Covariates and Serving Size")
+  parcoord(col = d$Shelf_factor,
+           var.label = T,
+           main = "Parallel Coordinates Plot for Scaled Covariates and Serving Size")
 
-legend(x= "right", inset = c(-.2,0),
-       legend = c("1","2", "3", "4"),
-       col=c(1,2,3,4),
-       title="shelf",
-       lty=1
-       )
+legend(
+  x = "right",
+  inset = c(-.2, 0),
+  legend = c("1", "2", "3", "4"),
+  col = c(1, 2, 3, 4),
+  title = "Shelf",
+  lty = 1
+)
 
 ```
+
 
 **Discuss if possible content differences exist among the shelves.**
 
@@ -157,7 +161,7 @@ Shelf 2, 3 and 4 have similar sodium content.
 
 **c. The response has values of $1, 2, 3,$ and $4$. Under what setting would it be desirable to take into account ordinality. Do you think that this setting occurs here?**
 
-It would make sense to account for ordinality if the variable values has some natural ordering and if we believe the proportional odds assumption of the ordinal logisitc regression. Here, it does not make sense to account for ordinality. We have no reason to believe that there is a natural ordering of shelves: we wouldn't expect a function of the covariates to make us believe the item deserves a higher shelf or a lower shelf. Rather we would expect a function of the covariates might point us to a particular shelf. It makes more sense to analyze each shelf separately.
+It would make sense to account for ordinality if the variable values has some natural ordering (e.g. Likert) and if we believe the proportional odds assumption of the ordinal logisitc regression. Here, it does not make sense to account for ordinality. We have no reason to believe that there is a natural ordering of shelves: we wouldn't expect a function of the covariates to make us believe the item deserves a higher shelf or a lower shelf. Rather we would expect a function of the covariates might point us to a particular shelf. It makes more sense to analyze each shelf separately.
 
 # d
 
